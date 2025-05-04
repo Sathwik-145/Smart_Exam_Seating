@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNRVJIET Exam Room Finder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff4e50;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --warning: #ffc107;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--light) 0%, #e6f2ff 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        header::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+        }
+        
+        .logo {
+            height: 50px;
+            margin-right: 15px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+        }
+        
+        .section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 24px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        h2::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--accent);
+        }
+        
+        h3 {
+            color: var(--secondary);
+            font-weight: 600;
+            margin: 20px 0 15px;
+        }
+        
+        input {
+            padding: 12px 15px;
+            width: 100%;
+            max-width: 300px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 15px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .process-btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .email-btn {
+            background: linear-gradient(to right, #28a745, #20c997);
+            color: white;
+        }
+        
+        .check-btn {
+            background: linear-gradient(to right, #fd7e14, #ffc107);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+            display: none;
+        }
+        
+        .error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 20px;
+            background: linear-gradient(to right, #f5f7fa, #e4e8eb);
+            color: var(--dark);
+            border-radius: 8px;
+            border: 2px dashed #c0c0c0;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-input-label:hover {
+            background: linear-gradient(to right, #e4e8eb, #d5d9dc);
+            border-color: var(--secondary);
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--secondary);
+        }
+        
+        footer {
+            background: linear-gradient(to right, var(--dark), #495057);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 50px;
+            position: relative;
+        }
+        
+        footer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent);
+            opacity: 0;
+            z-index: 9999;
+            animation: confetti-fall 5s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(106, 17, 203, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(106, 17, 203, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(106, 17, 203, 0);
+            }
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s ease;
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            line-height: 20px;
+        }
+        
+        .email-log {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        
+        .log-success {
+            color: var(--success);
+        }
+        
+        .log-error {
+            color: #dc3545;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .section {
+                width: 90%;
+            }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="animate__animated animate__fadeInDown">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3sizKdTZNaCf9ZEQdNJNWtjbfMa08Zeupdg&s" alt="VNRVJIET Logo" class="logo">
+        VNRVJIET Exam Room Finder
+    </header>
+    
+    <div class="container">
+        <!-- Teacher Section -->
+        <div class="section animate__animated animate__fadeInLeft">
+            <h2><i class="fas fa-chalkboard-teacher"></i> Teacher Portal</h2>
+            <h3>Upload Exam Room Allocation File</h3>
+            
+            <div class="file-input-wrapper">
+                <label for="fileInput" class="file-input-label">
+                    <i class="fas fa-file-excel"></i> Choose Excel File (.xlsx)
+                </label>
+                <input type="file" id="fileInput" accept=".xlsx">
+                <div id="fileName" class="file-name">No file chosen</div>
+            </div>
+            
+            <div class="button-group">
+                <button class="process-btn" onclick="processFile()">
+                    <i class="fas fa-cogs"></i> Process File
+                </button>
+                <button class="email-btn" onclick="sendBulkEmails()" id="sendEmailsBtn" disabled>
+                    <i class="fas fa-paper-plane"></i> Send All Emails
+                </button>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+            
+            <div class="result" id="uploadResult">
+                <div class="email-log" id="emailLog"></div>
+            </div>
+        </div>
+        
+        <!-- Student Section -->
+        <div class="section animate__animated animate__fadeInRight">
+            <h2><i class="fas fa-user-graduate"></i> Student Portal</h2>
+            <h3>Check Your Room Allocation</h3>
+            
+            <input type="text" id="studentRollNumber" placeholder="Enter Roll Number">
+            
+            <button class="check-btn" onclick="checkRoom()">
+                <i class="fas fa-search"></i> Find My Room
+            </button>
+            
+            <div class="result" id="studentRoomResult"></div>
+            
+            <div id="roomMap" style="margin-top: 20px; display: none;">
+                <!-- <h3>Your Exam Location</h3>
+                <div id="map" style="height: 200px; background-color: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-map-marked-alt" style="font-size: 50px; color: var(--secondary);"></i>
+                </div> -->
+            </div>
+        </div>
+    </div>
+    
+    <footer class="animate__animated animate__fadeInUp">
+        © 2025 VNRVJIET. All Rights Reserved.
+    </footer>
+    
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    
+    <script>
+        // Initialize EmailJS with your credentials
+        (function() {
+            emailjs.init("2FPKAr5iorwrIinJD"); // Replace with your actual User ID
+        })();
+        
+        let roomData = {};
+        let emailSendingInProgress = false;
+        
+        // Show selected file name
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const fileName = event.target.files[0] ? event.target.files[0].name : 'No file chosen';
+            document.getElementById('fileName').textContent = fileName;
+        });
+        
+        function processFile() {
+            if (emailSendingInProgress) {
+                alert("Please wait for current email sending to complete");
+                return;
+            }
+            
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('uploadResult');
+            const sendBtn = document.getElementById('sendEmailsBtn');
+            const logDiv = document.getElementById('emailLog');
+            
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = "<p class='error'>Please select a file first!</p>";
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            logDiv.innerHTML = "";
+            resultDiv.style.display = 'none';
+            
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    let data = new Uint8Array(e.target.result);
+                    let workbook = XLSX.read(data, { type: 'array' });
+                    let sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    let jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    
+                    roomData = {};
+                    jsonData.forEach((row, index) => {
+                        if (index > 0 && row.length >= 2) {
+                            let hallticket = String(row[0]).trim().toUpperCase();
+                            let room = String(row[1]).trim();
+                            roomData[hallticket] = room;
+                        }
+                    });
+                    
+                    sendBtn.disabled = false;
+                    
+                    resultDiv.style.display = 'block';
+                    logDiv.innerHTML = `<p class="log-success">Processed ${Object.keys(roomData).length} student records from ${file.name}</p>`;
+                    createConfetti();
+                } catch (error) {
+                    resultDiv.style.display = 'block';
+                    logDiv.innerHTML = `<p class="log-error">Error processing file: ${error.message}</p>`;
+                }
+            };
+            
+            reader.onerror = function() {
+                resultDiv.style.display = 'block';
+                logDiv.innerHTML = `<p class="log-error">Error reading file. Please try again.</p>`;
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Check Room Allocation for Student
+        function checkRoom() {
+            let rollNumber = document.getElementById('studentRollNumber').value.trim().toUpperCase();
+            let resultDiv = document.getElementById('studentRoomResult');
+            let roomMap = document.getElementById('roomMap');
+            
+            resultDiv.style.display = 'block';
+            roomMap.style.display = 'none';
+            
+            if (!rollNumber) {
+                resultDiv.innerHTML = "<p class='error'>Please enter your roll number!</p>";
+                return;
+            }
+            
+            if (roomData[rollNumber]) {
+                resultDiv.innerHTML = `<p class="success">🎉 Your exam room is: ${roomData[rollNumber]}</p>`;
+                roomMap.style.display = 'block';
+                createConfetti();
+            } else {
+                resultDiv.innerHTML = "<p class='error'>Roll number not found. Please check and try again.</p>";
+            }
+        }
+        
+        // Send Bulk Emails using EmailJS
+        async function sendBulkEmails() {
+            if (emailSendingInProgress) {
+                alert("Email sending already in progress");
+                return;
+            }
+            
+            if (Object.keys(roomData).length === 0) {
+                const resultDiv = document.getElementById('uploadResult');
+                resultDiv.innerHTML = "<p class='error'>Please process a valid file first!</p>";
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            emailSendingInProgress = true;
+            
+            const resultDiv = document.getElementById('uploadResult');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const sendBtn = document.getElementById('sendEmailsBtn');
+            const logDiv = document.getElementById('emailLog');
+            
+            // Clear previous logs
+            logDiv.innerHTML = "";
+            resultDiv.style.display = 'block';
+            
+            sendBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            logDiv.innerHTML += "<p>Starting email sending process...</p>";
+            
+            const rollNumbers = Object.keys(roomData);
+            const total = rollNumbers.length;
+            let successful = 0;
+            let failed = 0;
+            
+            // Get current date and time for exam details
+            const examDate = new Date();
+            const formattedDate = examDate.toLocaleDateString('en-IN');
+            const formattedTime = examDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            
+            for (let i = 0; i < total; i++) {
+                const rollNumber = rollNumbers[i];
+                const email = `${rollNumber.toLowerCase()}@vnrvjiet.in`;
+                const room = roomData[rollNumber];
+                
+                try {
+                    // Send email using EmailJS
+                    const response = await emailjs.send(
+                        "service_uq21so8", // Replace with your Service ID
+                        "template_82ufdc5", // Replace with your Template ID
+                        {
+                            email: email,
+                            student_name: "Student",
+                            roll_number: rollNumber,
+                            exam_room: room,
+                            exam_date: formattedDate,
+                            exam_time: formattedTime,
+                            from_name: "VNRVJIET Exam Cell"
+                        }
+                    );
+                    
+                    successful++;
+                    logDiv.innerHTML += `<p class="log-entry log-success">✓ Sent to ${rollNumber} (${email})</p>`;
+                } catch (error) {
+                    failed++;
+                    console.error(`Failed to send email to ${email}:`, error);
+                    logDiv.innerHTML += `<p class="log-entry log-error">✗ Failed ${rollNumber}: ${error.text || error.message}</p>`;
+                }
+                
+                // Scroll to bottom of log
+                logDiv.scrollTop = logDiv.scrollHeight;
+                
+                // Update progress
+                const progress = Math.floor(((i + 1) / total) * 100);
+                progressBar.style.width = progress + '%';
+                progressBar.innerText = progress + '%';
+                
+                // Small delay to avoid rate limiting (800ms between emails)
+                await new Promise(resolve => setTimeout(resolve, 800));
+            }
+            
+            // Show final results
+            logDiv.innerHTML += `<p><strong>Process completed:</strong> ${successful} successful, ${failed} failed</p>`;
+            sendBtn.disabled = false;
+            emailSendingInProgress = false;
+            
+            if (failed === 0) {
+                logDiv.innerHTML += `<p class="log-success">All emails sent successfully!</p>`;
+            } else {
+                logDiv.innerHTML += `<p class="log-error">Some emails failed to send. Check logs above.</p>`;
+            }
+            
+            createConfetti();
+        }
+        
+        // Create confetti effect
+        function createConfetti(count = 30) {
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                document.body.appendChild(confetti);
+                
+                // Remove confetti after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+        
+        function getRandomColor() {
+            const colors = ['#6a11cb', '#2575fc', '#ff4e50', '#28a745', '#ffc107', '#17a2b8'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+</body>
+</html>
